@@ -21,7 +21,7 @@
         overflow: hidden;
         background: #061da5;
       }
-      /* Lienzo DOOH: 2304 x 769 px. Sin escalado global. */
+      /* Lienzo de diseño DOOH: 1793 x 2051 px. Se escala en modo LLENAR. */
       #pantalla {
         position: absolute;
         width: 1793px;
@@ -120,8 +120,8 @@
         while (maximo - minimo > 0.25) {
           const medio = (minimo + maximo) / 2;
           contador.style.setProperty("--tam-numero", medio + "px");
-          const ancho = contador.getBoundingClientRect().width;
-          const alto = contador.getBoundingClientRect().height;
+          const ancho = contador.offsetWidth;
+          const alto = contador.offsetHeight;
           if (ancho <= area.clientWidth - 14 && alto <= area.clientHeight - 16) minimo = medio;
           else maximo = medio;
         }
@@ -164,13 +164,14 @@
         const escalaX = anchoPantalla / anchoDiseno;
         const escalaY = altoPantalla / altoDiseno;
 
-        const lienzo = document.getElementById("lienzo-dooh");
+        const lienzo = document.getElementById("pantalla");
 
         if (!lienzo) return;
 
         lienzo.style.transform = `scale(${escalaX}, ${escalaY})`;
       }
 
+      aplicarModoLlenar();
       window.addEventListener("DOMContentLoaded", aplicarModoLlenar);
       window.addEventListener("resize", aplicarModoLlenar);
     </script>
