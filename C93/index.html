@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Cuenta regresiva Black Friday - iCo Medios</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #061da5;
+      }
+      #pantalla {
+        position: relative;
+        width: 3840px;
+        height: 542px;
+        overflow: hidden;
+        background: url("./fondo.png") center center / 100% 100% no-repeat;
+      }
+      /* Área original del contador sobre el recuadro azul del fondo. */
+      #area-contador {
+        position: absolute;
+        left: 2016px;
+        top: 281px;
+        width: 701px;
+        height: 212px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      #contador {
+        --tam-numero: 250px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: calc(var(--tam-numero) * 0.69);
+        width: max-content;
+        max-width: none;
+        white-space: nowrap;
+        font-family: "Bebas Neue", Impact, sans-serif;
+        font-weight: 400;
+        font-style: normal;
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum";
+        color: #fff;
+      }
+      /* Dos bloques: días a la izquierda y horas/minutos a la derecha. */
+      #bloque-dias,
+      #bloque-horas-minutos {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      #bloque-horas-minutos {
+        gap: calc(var(--tam-numero) * 0.17);
+      }
+      /* Línea vertical para diferenciar los dos bloques. */
+      #division {
+        align-self: center;
+        width: max(2px, calc(var(--tam-numero) * 0.1));
+        height: max(2px, calc(var(--tam-numero) * 2.2));
+        background: rgba(255, 255, 255, 0.82);
+        flex-shrink: 0;
+      }
+      /* Los tres grupos comparten dimensiones, altura y estilo de etiqueta. */
+      .grupo-tiempo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-width: 0;
+      }
+      .valor-tiempo {
+        font-size: calc(var(--tam-numero) * 2.3);
+        line-height: 0.87;
+        text-align: center;
+      }
+      .etiqueta-tiempo {
+        margin-top: calc(var(--tam-numero) * 0.07);
+        font-size: calc(var(--tam-numero) * 0.7);
+        line-height: 1;
+        letter-spacing: 0.035em;
+        text-align: center;
+      }
+      .separador {
+        font-size: calc(var(--tam-numero) * 2);
+        line-height: 0.87;
+        align-self: flex-start;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="pantalla" aria-label="Cuenta regresiva Black Friday">
+      <div id="area-contador">
+        <div id="contador" role="timer" aria-label="Tiempo restante para Black Friday">
+          <div id="bloque-dias">
+            <div class="grupo-tiempo" id="dias-grupo">
+              <span class="valor-tiempo" id="dias">00</span>
+              <span class="etiqueta-tiempo">DÍAS</span>
+            </div>
+          </div>
+          <span id="division" aria-hidden="true"></span>
+          <div id="bloque-horas-minutos">
+            <div class="grupo-tiempo">
+              <span class="valor-tiempo" id="horas">00</span>
+              <span class="etiqueta-tiempo">HRS</span>
+            </div>
+            <span class="separador" aria-hidden="true">:</span>
+            <div class="grupo-tiempo">
+              <span class="valor-tiempo" id="minutos">00</span>
+              <span class="etiqueta-tiempo">MIN</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script>
+      "use strict";
+      // 27 de noviembre de 2026, 00:01 a. m., hora de Colombia (UTC-05:00).
+      const fechaFinal = Date.parse("2026-11-27T00:01:00-05:00");
+      const area = document.getElementById("area-contador");
+      const contador = document.getElementById("contador");
+      const diasElemento = document.getElementById("dias");
+      const horasElemento = document.getElementById("horas");
+      const minutosElemento = document.getElementById("minutos");
+      const dosDigitos = (numero) => String(numero).padStart(2, "0");
+
+      function ajustarFuente() {
+        // Solo cambia el tamaño del contador. No altera el fondo ni sus dimensiones.
+        let minimo = 12;
+        let maximo = 250;
+        while (maximo - minimo > 0.25) {
+          const medio = (minimo + maximo) / 2;
+          contador.style.setProperty("--tam-numero", medio + "px");
+          const ancho = contador.getBoundingClientRect().width;
+          const alto = contador.getBoundingClientRect().height;
+          if (ancho <= area.clientWidth - 14 && alto <= area.clientHeight - 16) minimo = medio;
+          else maximo = medio;
+        }
+        contador.style.setProperty("--tam-numero", minimo + "px");
+      }
+
+      function actualizarContador() {
+        const restante = Math.max(0, Math.ceil((fechaFinal - Date.now()) / 1000));
+        const dias = Math.floor(restante / 86400);
+        const horas = Math.floor((restante % 86400) / 3600);
+        const minutos = Math.floor((restante % 3600) / 60);
+
+        const textoDias = dosDigitos(dias);
+        const textoHoras = dosDigitos(horas);
+        const textoMinutos = dosDigitos(minutos);
+        let cambio = false;
+        if (diasElemento.textContent !== textoDias) {
+          diasElemento.textContent = textoDias;
+          cambio = true;
+        }
+        if (horasElemento.textContent !== textoHoras) {
+          horasElemento.textContent = textoHoras;
+          cambio = true;
+        }
+        if (minutosElemento.textContent !== textoMinutos) {
+          minutosElemento.textContent = textoMinutos;
+          cambio = true;
+        }
+        if (cambio) ajustarFuente();
+
+        contador.setAttribute("aria-label", `${dias} días, ${horas} horas, ${minutos} minutos`);
+      }
+
+      actualizarContador();
+      ajustarFuente();
+      setInterval(actualizarContador, 250);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajustarFuente);
+      window.addEventListener("resize", ajustarFuente);
+    </script>
+  </body>
+</html>
