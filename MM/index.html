@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="color-scheme" content="dark" />
     <title>Cuenta regresiva Black Friday - iCo Medios</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -19,12 +19,16 @@
         height: 100%;
         overflow: hidden;
         background: #061da5;
+        touch-action: none;
       }
-      /* Lienzo DOOH: 2304 x 769 px. Sin escalado global. */
+      /* Lienzo de diseño de 2160 x 3840, escalado proporcional según viewport. */
       #pantalla {
-        position: relative;
+        position: absolute;
+        left: 0;
+        top: 0;
         width: 2160px;
-        height: 3840px ;
+        height: 3840px;
+        transform-origin: top left;
         overflow: hidden;
         background: url("./fondo.png") center center / 100% 100% no-repeat;
       }
@@ -109,15 +113,26 @@
       const tiempoElemento = document.getElementById("tiempo");
       const dosDigitos = (numero) => String(numero).padStart(2, "0");
 
+      function ajustarLienzo() {
+        // Escala fondo, contador y posiciones de forma idéntica.
+        const ancho = document.documentElement.clientWidth || window.innerWidth;
+        const alto = document.documentElement.clientHeight || window.innerHeight;
+        const factor = Math.min(ancho / 2160, alto / 3840);
+        const offsetX = (ancho - 2160 * factor) / 2;
+        const offsetY = (alto - 3840 * factor) / 2;
+        document.getElementById("pantalla").style.transform =
+          `translate(${offsetX}px, ${offsetY}px) scale(${factor})`;
+      }
+
       function ajustarFuente() {
-        // Solo cambia tamaños de texto; no altera el fondo, el lienzo ni el área del contador.
+        // Mide el contador en coordenadas originales, no en píxeles ya escalados.
         let minimo = 12;
         let maximo = 250;
         while (maximo - minimo > 0.25) {
           const medio = (minimo + maximo) / 2;
           contador.style.setProperty("--tam-numero", medio + "px");
-          const ancho = contador.getBoundingClientRect().width;
-          const alto = contador.getBoundingClientRect().height;
+          const ancho = contador.offsetWidth;
+          const alto = contador.offsetHeight;
           if (ancho <= area.clientWidth - 14 && alto <= area.clientHeight - 16) minimo = medio;
           else maximo = medio;
         }
@@ -143,11 +158,15 @@
         );
       }
 
+      ajustarLienzo();
       actualizarContador();
       ajustarFuente();
       setInterval(actualizarContador, 250);
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajustarFuente);
-      window.addEventListener("resize", ajustarFuente);
+      window.addEventListener("resize", () => {
+        ajustarLienzo();
+        ajustarFuente();
+      });
     </script>
   </body>
 </html>
